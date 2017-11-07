@@ -31,5 +31,10 @@
     	<artifactId>mulan</artifactId>
     	<version>1.4.0</version>
     </dependency>
+    <dependency>
+    	<groupId>org.mockito</groupId>
+    	<artifactId>mockito-core</artifactId>
+    	<version>2.11.0</version>
+    </dependency>
   </dependencies>
 </project>

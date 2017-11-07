@@ -17,6 +17,7 @@
 package br.ufpe.cin.vat.jmcs.selection.dynamic;
 
 import weka.classifiers.Classifier;
+import weka.core.Instances;
 
 /**
  * Interface for all Dynamic Selection techniques.
@@ -29,6 +30,7 @@ public interface DynamicSelection
      * Sets the classifiers from the original pool, from which a subset will be
      * selected at each classifying step.
      * @param classifiers - The classifiers that compose the original pool.
+     * @since 0.1
      */
     void setClassifiers(Classifier[] classifiers);
 
@@ -36,6 +38,16 @@ public interface DynamicSelection
      * Retrieves the classifiers from the original pool, from which a subset
      * will be selected at each classifying step.
      * @return - The classifiers that compose the original pool.
+     * @since 0.1
      */
     Classifier[] getClassifiers();
+
+    /**
+     * Trains the Selector according to the selection data set provided.
+     * @param selectionDataSet - The selection data set to train the selector.
+     * @throws Exception - In case the original classifiers can't classify the
+     * selection instances.
+     * @since 0.1
+     */
+    void buildSelector(Instances selectionDataSet) throws Exception;
 }

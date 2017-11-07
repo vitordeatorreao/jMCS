@@ -16,10 +16,17 @@
 
 package br.ufpe.cin.vat.jmcs.selection.dynamic;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import br.ufpe.cin.vat.jmcs.utils.MultiLabel;
 import mulan.classifier.MultiLabelLearner;
+import mulan.data.LabelsMetaData;
+import mulan.data.MultiLabelInstances;
 import weka.classifiers.Classifier;
 import weka.classifiers.MultipleClassifiersCombiner;
-import weka.core.Capabilities;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -32,7 +39,7 @@ import weka.core.Instances;
  *
  */
 public class MultiLabelDynamicEnsembleSelection
-    implements DynamicSelection, DynamicEnsembleSelection, Classifier
+    implements DynamicSelection, DynamicEnsembleSelection
 {
     /**
      * The set of classifiers in the original pool. 
@@ -50,6 +57,11 @@ public class MultiLabelDynamicEnsembleSelection
      * ensembles for the classification tasks.
      */
     private MultiLabelLearner mlAlgorithm;
+
+    /**
+     * The multi-label data set for the selection task. 
+     */
+    private MultiLabelInstances selectionDataSet;
 
     /**
      * Constructs a new instance of MultiLabelDynamicEnsembleSelection with
@@ -78,7 +90,8 @@ public class MultiLabelDynamicEnsembleSelection
      * the original pool of classifiers.
      * @since 0.1
      */
-    public MultiLabelDynamicEnsembleSelection(MultipleClassifiersCombiner ensemble)
+    public MultiLabelDynamicEnsembleSelection(
+            MultipleClassifiersCombiner ensemble)
     {
         this.classifiers = ensemble.getClassifiers();
         this.combiner = ensemble;
@@ -99,28 +112,6 @@ public class MultiLabelDynamicEnsembleSelection
     {
         this.classifiers = classifiers;
     }
-    
-    public Classifier[] getClassifiers()
-    {
-        return this.classifiers;
-    }
-    
-    public void setClassifiers(Classifier[] classifiers)
-    {
-        this.classifiers = classifiers;
-    }
-
-    
-    public MultipleClassifiersCombiner getCombiner()
-    {
-        return this.combiner;
-    }
-
-    
-    public void setCombiner(MultipleClassifiersCombiner combiner)
-    {
-        this.combiner = combiner;
-    }
 
     /**
      * Retrieves the multi-label algorithm configured to be used in the dynamic
@@ -134,7 +125,7 @@ public class MultiLabelDynamicEnsembleSelection
     }
 
     /**
-     * Configures the multi-label algorithm to be used in the selection step. 
+     * Configures the multi-label algorithm to be used in the selection step.
      * @param mlAlgothm - The multi-label algorithm to be used in the
      * selection.
      * @since 0.1
@@ -144,27 +135,148 @@ public class MultiLabelDynamicEnsembleSelection
         this.mlAlgorithm = mlAlgothm;
     }
 
-    public void buildClassifier(Instances selectionDataSet) throws Exception
+    /**
+     * Retrieves the classifiers from the original pool, from which a subset
+     * will be selected at each classifying step.
+     * @return - The classifiers that compose the original pool.
+     * @since 0.1
+     */
+    public Classifier[] getClassifiers()
     {
-        // TODO Auto-generated method stub
-        return;
+        return this.classifiers;
     }
 
-    public double classifyInstance(Instance instance) throws Exception
+    /**
+     * Sets the classifiers from the original pool, from which a subset will be
+     * selected at each classifying step.
+     * @param classifiers - The classifiers that compose the original pool.
+     * @since 0.1
+     */
+    public void setClassifiers(Classifier[] classifiers)
     {
-        // TODO Auto-generated method stub
-        return 0;
+        this.classifiers = classifiers;
     }
 
-    public double[] distributionForInstance(Instance instance) throws Exception
+    /**
+     * Retrives the instance implementing the way the selected subset of
+     * classifiers will be combined for providing a final answer to the
+     * classification task.
+     * @return The instance implementing the way the selected subset of
+     * classifiers will be combined for providing a final answer to the
+     * classification task.
+     * @since 0.1
+     */
+    public MultipleClassifiersCombiner getCombiner()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return this.combiner;
     }
 
-    public Capabilities getCapabilities()
+    /**
+     * Configures the way the selected subset of classifiers will be combined
+     * for providing a final answer to the classification task.
+     * @param combiner - An instance implementing the way the selected subset
+     * of classifiers will be combined for providing a final answer to the
+     * classification task.
+     * @since 0.1
+     */
+    public void setCombiner(MultipleClassifiersCombiner combiner)
     {
-        // TODO Auto-generated method stub
-        return null;
+        this.combiner = combiner;
+    }
+
+    /**
+     * Constructs a new data set by adding the classifiers' outputs as new
+     * columns. 
+     * @param selectionDataSet - The data set used as meta-information for
+     * the dynamic selection step.
+     * @return The new data set constructed by adding the classifiers' outputs
+     * as new columns.
+     * @throws Exception - Throws up any exception that occurs during the
+     * execution of the classifiers in the original ensemble.
+     * @since 0.1
+     */
+    public Instances getMultiLabelDataSet(Instances selectionDataSet)
+            throws Exception
+    {
+        int numAttributes = selectionDataSet.numAttributes();
+        int numLabels = this.classifiers.length;
+        int numInstances = selectionDataSet.size();
+        // -1 due to the class label
+        int initialCapacity = numAttributes - 1 + numLabels;
+        ArrayList<Attribute> attrInfo =
+                new ArrayList<Attribute>(initialCapacity);
+        for (int i = 0; i < numAttributes; i++)
+        {
+            if (i == selectionDataSet.classIndex()) continue;
+            attrInfo.add(selectionDataSet.attribute(i));
+        }
+        List<String> multiLabelOutput = new ArrayList<String>(2);
+        multiLabelOutput.add("0");
+        multiLabelOutput.add("1");
+        for (int c = 0; c < numLabels; c++)
+        {
+            attrInfo.add(new Attribute("Classifier" + c, multiLabelOutput));
+        }
+        Instances aux = new Instances("Selection", attrInfo, numInstances);
+        for (int n = 0; n < numInstances; n++)
+        {
+            Instance data = new DenseInstance(initialCapacity);
+            for (int a = 0; a < numAttributes - 1; a++)
+            {
+                data.setValue(aux.attribute(a),
+                              selectionDataSet.get(n).value(a));
+            }
+            int start = numAttributes - 1;
+            for (int c = 0; c < numLabels; c++)
+            {
+                Instance instance = selectionDataSet.get(n);
+                double correct = instance.classValue();
+                double actual = this.classifiers[c].classifyInstance(instance);
+                double delta = Math.abs(actual - correct); 
+                if (delta < 0.0001)
+                {
+                    data.setValue(aux.attribute(c + start), "1");
+                }
+                else
+                {
+                    data.setValue(aux.attribute(c + start), "0");
+                }
+            }
+            aux.add(data);
+        }
+        return aux;
+    }
+
+    /**
+     * Trains the Selector according to the selection data set provided.
+     * @param selectionDataSet - The selection data set to train the selector.
+     * @throws Exception - In case the original classifiers can't classify the
+     * selection instances.
+     * @since 0.1
+     */
+    public void buildSelector(Instances selectionDataSet) throws Exception
+    {
+        if (this.classifiers == null)
+        {
+            throw new IllegalStateException("You can't call buildSelector " +
+                "before configuring the initial pool.");
+        }
+        if (selectionDataSet.classIndex() < 0)
+        {
+            throw new IllegalArgumentException("The provided selection data "+
+                "must have a class label configured.");
+        }
+        int numAttributes = selectionDataSet.numAttributes();
+        Instances multiLabelDataSet = getMultiLabelDataSet(selectionDataSet);
+        int[] labelsIndexes = new int[this.classifiers.length];
+        for (int c = 0; c < this.classifiers.length; c++)
+        {
+            labelsIndexes[c] = c + numAttributes;
+        }
+        LabelsMetaData metaData =
+                MultiLabel.getLabelsMetaData(multiLabelDataSet, labelsIndexes);
+        this.selectionDataSet = new MultiLabelInstances(multiLabelDataSet,
+                                                        metaData);
+        this.mlAlgorithm.build(this.selectionDataSet);
     }
 }
