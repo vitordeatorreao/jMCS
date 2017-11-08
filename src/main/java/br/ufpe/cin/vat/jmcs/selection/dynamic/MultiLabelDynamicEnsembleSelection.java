@@ -21,6 +21,7 @@ import java.util.List;
 
 import br.ufpe.cin.vat.jmcs.utils.MultiLabel;
 import mulan.classifier.MultiLabelLearner;
+import mulan.classifier.MultiLabelOutput;
 import mulan.data.LabelsMetaData;
 import mulan.data.MultiLabelInstances;
 import weka.classifiers.Classifier;
@@ -64,11 +65,19 @@ public class MultiLabelDynamicEnsembleSelection
     private MultiLabelInstances selectionDataSet;
 
     /**
+     * Threshold used in the MultiLabelOutput to form a bipartition.
+     */
+    private Integer threshold;
+
+    /**
      * Constructs a new instance of MultiLabelDynamicEnsembleSelection with
      * clean settings.
      * @since 0.1 
      */
-    public MultiLabelDynamicEnsembleSelection() { }
+    public MultiLabelDynamicEnsembleSelection()
+    {
+        this.threshold = null;
+    }
 
     /**
      * Constructs a new instance of MultiLabelDynamicEnsembleSelection with
@@ -79,6 +88,7 @@ public class MultiLabelDynamicEnsembleSelection
      */
     public MultiLabelDynamicEnsembleSelection(Classifier[] classifiers)
     {
+        this();
         this.classifiers = classifiers;
     }
 
@@ -93,6 +103,7 @@ public class MultiLabelDynamicEnsembleSelection
     public MultiLabelDynamicEnsembleSelection(
             MultipleClassifiersCombiner ensemble)
     {
+        this();
         this.classifiers = ensemble.getClassifiers();
         this.combiner = ensemble;
     }
@@ -110,7 +121,9 @@ public class MultiLabelDynamicEnsembleSelection
     public MultiLabelDynamicEnsembleSelection(
             Classifier[] classifiers, MultipleClassifiersCombiner combiner)
     {
+        this();
         this.classifiers = classifiers;
+        this.combiner = combiner;
     }
 
     /**
@@ -135,50 +148,21 @@ public class MultiLabelDynamicEnsembleSelection
         this.mlAlgorithm = mlAlgothm;
     }
 
-    /**
-     * Retrieves the classifiers from the original pool, from which a subset
-     * will be selected at each classifying step.
-     * @return - The classifiers that compose the original pool.
-     * @since 0.1
-     */
     public Classifier[] getClassifiers()
     {
         return this.classifiers;
     }
 
-    /**
-     * Sets the classifiers from the original pool, from which a subset will be
-     * selected at each classifying step.
-     * @param classifiers - The classifiers that compose the original pool.
-     * @since 0.1
-     */
     public void setClassifiers(Classifier[] classifiers)
     {
         this.classifiers = classifiers;
     }
 
-    /**
-     * Retrives the instance implementing the way the selected subset of
-     * classifiers will be combined for providing a final answer to the
-     * classification task.
-     * @return The instance implementing the way the selected subset of
-     * classifiers will be combined for providing a final answer to the
-     * classification task.
-     * @since 0.1
-     */
     public MultipleClassifiersCombiner getCombiner()
     {
         return this.combiner;
     }
 
-    /**
-     * Configures the way the selected subset of classifiers will be combined
-     * for providing a final answer to the classification task.
-     * @param combiner - An instance implementing the way the selected subset
-     * of classifiers will be combined for providing a final answer to the
-     * classification task.
-     * @since 0.1
-     */
     public void setCombiner(MultipleClassifiersCombiner combiner)
     {
         this.combiner = combiner;
@@ -247,13 +231,6 @@ public class MultiLabelDynamicEnsembleSelection
         return aux;
     }
 
-    /**
-     * Trains the Selector according to the selection data set provided.
-     * @param selectionDataSet - The selection data set to train the selector.
-     * @throws Exception - In case the original classifiers can't classify the
-     * selection instances.
-     * @since 0.1
-     */
     public void buildSelector(Instances selectionDataSet) throws Exception
     {
         if (this.classifiers == null)
@@ -279,4 +256,50 @@ public class MultiLabelDynamicEnsembleSelection
                                                         metaData);
         this.mlAlgorithm.build(this.selectionDataSet);
     }
+
+    /**
+     * Retrieves a bipartition of classifiers that are competent or not for
+     * classifying the given Instance. It will either use the multi-label
+     * algorithm's default bipartition strategy or the OneThreshold strategy,
+     * depending on whether the Threshold has been set or not.
+     * @param instance - The Instance to be classified.
+     * @return The bipartition of classifiers that are competent or not for
+     * classifying the given Instance.
+     * @throws Exception In case the multi-label model cannot classify the
+     * given instance.
+     */
+    public boolean[] getBipartition(Instance instance) throws Exception
+    {
+        MultiLabelOutput output = this.mlAlgorithm.makePrediction(instance);
+		boolean[] bipartition;
+		// use default, or OneThreshold strategy to form a bipartition
+		if (output.hasConfidences() && this.threshold != null)
+		{
+			bipartition = new boolean[this.classifiers.length];
+			double[] confidence = output.getConfidences();
+			for (int c = 0; c < this.classifiers.length; c++)
+			{
+				if (confidence[c] > this.threshold) bipartition[c] = true;
+				else bipartition[c] = false;
+			}
+		}
+		else
+		{
+			bipartition = output.getBipartition();
+		}
+		return bipartition;
+    }
+
+	@Override
+	public double classifyInstance(Instance instance) throws Exception
+	{
+		boolean[] bipartition = this.getBipartition(instance);
+		List<Classifier> classifiers = new ArrayList<Classifier>();
+		for (int c = 0; c < this.classifiers.length; c++)
+		{
+			if (bipartition[c]) classifiers.add(this.classifiers[c]);
+		}
+		this.combiner.setClassifiers((Classifier[])classifiers.toArray());
+		return this.combiner.classifyInstance(instance);
+	}
 }
