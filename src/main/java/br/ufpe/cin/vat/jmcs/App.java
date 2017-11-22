@@ -2,6 +2,7 @@ package br.ufpe.cin.vat.jmcs;
 
 import java.util.Random;
 
+import br.ufpe.cin.vat.jmcs.utils.Statistics;
 import weka.classifiers.trees.J48;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
@@ -40,9 +41,8 @@ public class App
                     if (actual.equals(predicted)) agree++;
                 }
                 accuracies[i] = agree / test.size();
-                System.out.println(accuracies[i]);
             }
-            System.out.println(accuracies);
+            System.out.println("Mean accuracy = " + Statistics.Mean(accuracies));
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

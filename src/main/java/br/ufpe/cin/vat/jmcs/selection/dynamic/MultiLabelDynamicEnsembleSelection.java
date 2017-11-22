@@ -68,7 +68,12 @@ public class MultiLabelDynamicEnsembleSelection
     /**
      * Threshold used in the MultiLabelOutput to form a bipartition.
      */
-    private Integer threshold;
+    private Double threshold;
+
+    /**
+     * Holds the attribute information for the current multilabel problem
+     */
+    private ArrayList<Attribute> attributeInfo;
 
     /**
      * Constructs a new instance of MultiLabelDynamicEnsembleSelection with
@@ -149,6 +154,26 @@ public class MultiLabelDynamicEnsembleSelection
         this.mlAlgorithm = mlAlgothm;
     }
 
+    /**
+     * Retrieves the configured threshold. It may be null if no threshold was
+     * configured.
+     * @return The configured threshold or null.
+     */
+    public Double getThreshold()
+    {
+        return this.threshold;
+    }
+
+    /**
+     * Configures the threshold to be used in order to get the bipartition.
+     * @param threshold - The threshold to be used.
+     * @since 0.1
+     */
+    public void setThreshold(double threshold)
+    {
+        this.threshold = threshold;
+    }
+
     public Classifier[] getClassifiers()
     {
         return this.classifiers;
@@ -188,21 +213,22 @@ public class MultiLabelDynamicEnsembleSelection
         int numInstances = selectionDataSet.size();
         // -1 due to the class label
         int initialCapacity = numAttributes - 1 + numLabels;
-        ArrayList<Attribute> attrInfo =
-                new ArrayList<Attribute>(initialCapacity);
+        this.attributeInfo = new ArrayList<Attribute>(initialCapacity);
         for (int i = 0; i < numAttributes; i++)
         {
             if (i == selectionDataSet.classIndex()) continue;
-            attrInfo.add(selectionDataSet.attribute(i));
+            this.attributeInfo.add(selectionDataSet.attribute(i));
         }
         List<String> multiLabelOutput = new ArrayList<String>(2);
         multiLabelOutput.add("0");
         multiLabelOutput.add("1");
         for (int c = 0; c < numLabels; c++)
         {
-            attrInfo.add(new Attribute("Classifier" + c, multiLabelOutput));
+            this.attributeInfo.add(
+                    new Attribute("Classifier" + c, multiLabelOutput));
         }
-        Instances aux = new Instances("Selection", attrInfo, numInstances);
+        Instances aux = new Instances(
+                "Selection", this.attributeInfo, numInstances);
         for (int n = 0; n < numInstances; n++)
         {
             Instance data = new DenseInstance(initialCapacity);
@@ -245,6 +271,7 @@ public class MultiLabelDynamicEnsembleSelection
      */
     public boolean[] getBipartition(Instance instance) throws Exception
     {
+        instance = this.getMultiLabelInstanceForClassification(instance);
         MultiLabelOutput output = this.mlAlgorithm.makePrediction(instance);
 		boolean[] bipartition;
 		// use default, or OneThreshold strategy to form a bipartition
@@ -284,6 +311,7 @@ public class MultiLabelDynamicEnsembleSelection
                 "must have a class label configured.");
         }
         int numAttributes = selectionDataSet.numAttributes();
+        if (selectionDataSet.classIndex() > 0) numAttributes--; // discount for the class
         Instances multiLabelDataSet = getMultiLabelDataSet(selectionDataSet);
         int[] labelsIndexes = new int[this.classifiers.length];
         for (int c = 0; c < this.classifiers.length; c++)
@@ -310,6 +338,14 @@ public class MultiLabelDynamicEnsembleSelection
             MultiLabelDynamicEnsembleSelection.class.getName());
     }
 
+    /**
+     * Calls the combiner's setClassifiers with a list of classifiers in the
+     * MultiLabel algorithm's bipartition.
+     * @param instance - The instance being classified. It is used to get the
+     * bipartition.
+     * @throws Exception - Thrown by getBipartition.
+     * @since 0.1
+     */
     private void configureCombiner(Instance instance) throws Exception
     {
         boolean[] bipartition = this.getBipartition(instance);
@@ -318,6 +354,29 @@ public class MultiLabelDynamicEnsembleSelection
         {
             if (bipartition[c]) classifiers.add(this.classifiers[c]);
         }
-        this.combiner.setClassifiers((Classifier[])classifiers.toArray());
+        Classifier[] aux = new Classifier[classifiers.size()];
+        this.combiner.setClassifiers(classifiers.toArray(aux));
+    }
+
+    /**
+     * When the instance comes in for classification, it doesn't have all the
+     * needed attributes, since it lacks the multiple labels. This helper
+     * method adds those attributes, so you can pass the instance to the
+     * multilabel algorithm's makePrediction method.
+     * @param instance - The instance being classified.
+     * @return The Instance ready for use in makePrediction.
+     * @since 0.1
+     */
+    private Instance getMultiLabelInstanceForClassification(Instance instance)
+    {
+        Instances aux = new Instances("Phony", this.attributeInfo, 1);
+        Instance data = new DenseInstance(this.attributeInfo.size());
+        int numAttrs = this.attributeInfo.size() - this.classifiers.length;
+        for (int a = 0; a < numAttrs; a++)
+        {
+            data.setValue(aux.attribute(a),
+                          instance.value(a));
+        }
+        return data;
     }
 }
