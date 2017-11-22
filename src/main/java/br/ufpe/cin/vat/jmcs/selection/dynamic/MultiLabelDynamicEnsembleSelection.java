@@ -27,6 +27,7 @@ import mulan.data.MultiLabelInstances;
 import weka.classifiers.Classifier;
 import weka.classifiers.MultipleClassifiersCombiner;
 import weka.core.Attribute;
+import weka.core.Capabilities;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -40,7 +41,7 @@ import weka.core.Instances;
  *
  */
 public class MultiLabelDynamicEnsembleSelection
-    implements DynamicSelection, DynamicEnsembleSelection
+    implements Classifier, DynamicSelection, DynamicEnsembleSelection
 {
     /**
      * The set of classifiers in the original pool. 
@@ -231,32 +232,6 @@ public class MultiLabelDynamicEnsembleSelection
         return aux;
     }
 
-    public void buildSelector(Instances selectionDataSet) throws Exception
-    {
-        if (this.classifiers == null)
-        {
-            throw new IllegalStateException("You can't call buildSelector " +
-                "before configuring the initial pool.");
-        }
-        if (selectionDataSet.classIndex() < 0)
-        {
-            throw new IllegalArgumentException("The provided selection data "+
-                "must have a class label configured.");
-        }
-        int numAttributes = selectionDataSet.numAttributes();
-        Instances multiLabelDataSet = getMultiLabelDataSet(selectionDataSet);
-        int[] labelsIndexes = new int[this.classifiers.length];
-        for (int c = 0; c < this.classifiers.length; c++)
-        {
-            labelsIndexes[c] = c + numAttributes;
-        }
-        LabelsMetaData metaData =
-                MultiLabel.getLabelsMetaData(multiLabelDataSet, labelsIndexes);
-        this.selectionDataSet = new MultiLabelInstances(multiLabelDataSet,
-                                                        metaData);
-        this.mlAlgorithm.build(this.selectionDataSet);
-    }
-
     /**
      * Retrieves a bipartition of classifiers that are competent or not for
      * classifying the given Instance. It will either use the multi-label
@@ -290,16 +265,59 @@ public class MultiLabelDynamicEnsembleSelection
 		return bipartition;
     }
 
-	@Override
 	public double classifyInstance(Instance instance) throws Exception
 	{
-		boolean[] bipartition = this.getBipartition(instance);
-		List<Classifier> classifiers = new ArrayList<Classifier>();
-		for (int c = 0; c < this.classifiers.length; c++)
-		{
-			if (bipartition[c]) classifiers.add(this.classifiers[c]);
-		}
-		this.combiner.setClassifiers((Classifier[])classifiers.toArray());
+		this.configureCombiner(instance);
 		return this.combiner.classifyInstance(instance);
 	}
+
+    public void buildClassifier(Instances selectionDataSet) throws Exception
+    {
+        if (this.classifiers == null)
+        {
+            throw new IllegalStateException("You can't call buildSelector " +
+                "before configuring the initial pool.");
+        }
+        if (selectionDataSet.classIndex() < 0)
+        {
+            throw new IllegalArgumentException("The provided selection data "+
+                "must have a class label configured.");
+        }
+        int numAttributes = selectionDataSet.numAttributes();
+        Instances multiLabelDataSet = getMultiLabelDataSet(selectionDataSet);
+        int[] labelsIndexes = new int[this.classifiers.length];
+        for (int c = 0; c < this.classifiers.length; c++)
+        {
+            labelsIndexes[c] = c + numAttributes;
+        }
+        LabelsMetaData metaData =
+                MultiLabel.getLabelsMetaData(multiLabelDataSet, labelsIndexes);
+        this.selectionDataSet = new MultiLabelInstances(multiLabelDataSet,
+                                                        metaData);
+        this.mlAlgorithm.build(this.selectionDataSet);
+    }
+
+    public double[] distributionForInstance(Instance instance) throws Exception
+    {
+        this.configureCombiner(instance);
+        return this.combiner.distributionForInstance(instance);
+    }
+
+    public Capabilities getCapabilities()
+    {
+        throw new UnsupportedOperationException(
+            "getCapabilities is not implemented for the class " +
+            MultiLabelDynamicEnsembleSelection.class.getName());
+    }
+
+    private void configureCombiner(Instance instance) throws Exception
+    {
+        boolean[] bipartition = this.getBipartition(instance);
+        List<Classifier> classifiers = new ArrayList<Classifier>();
+        for (int c = 0; c < this.classifiers.length; c++)
+        {
+            if (bipartition[c]) classifiers.add(this.classifiers[c]);
+        }
+        this.combiner.setClassifiers((Classifier[])classifiers.toArray());
+    }
 }

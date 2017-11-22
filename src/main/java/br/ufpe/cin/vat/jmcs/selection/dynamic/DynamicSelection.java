@@ -17,8 +17,6 @@
 package br.ufpe.cin.vat.jmcs.selection.dynamic;
 
 import weka.classifiers.Classifier;
-import weka.core.Instance;
-import weka.core.Instances;
 
 /**
  * Interface for all Dynamic Selection techniques.
@@ -42,22 +40,4 @@ public interface DynamicSelection
      * @since 0.1
      */
     Classifier[] getClassifiers();
-
-    /**
-     * Trains the Selector according to the selection data set provided.
-     * @param selectionDataSet - The selection data set to train the selector.
-     * @throws Exception In case the original classifiers can't classify the
-     * selection instances.
-     * @since 0.1
-     */
-    void buildSelector(Instances selectionDataSet) throws Exception;
-
-    /**
-     * Classifies the instance after selecting the appropriate classifier(s).
-     * @param instance - The Instance to be classified.
-     * @throws Exception In case any of the classifiers fail to classify the
-     * instance.
-     * @return The final class output of the system.
-     */
-    double classifyInstance(Instance instance) throws Exception;
 }
