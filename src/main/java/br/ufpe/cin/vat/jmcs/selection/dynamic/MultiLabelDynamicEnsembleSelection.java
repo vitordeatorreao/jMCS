@@ -33,7 +33,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 /**
- * Abstract utility class for handling settings common to Dynamic Ensemble
+ * Utility class for handling settings common to Dynamic Ensemble
  * Selection techniques based on the use of multi-label classifiers as
  * meta-classifiers.
  * @author vitordeatorreao
@@ -83,6 +83,7 @@ public class MultiLabelDynamicEnsembleSelection
     public MultiLabelDynamicEnsembleSelection()
     {
         this.threshold = null;
+        this.classifiers = new Classifier[0];
     }
 
     /**
