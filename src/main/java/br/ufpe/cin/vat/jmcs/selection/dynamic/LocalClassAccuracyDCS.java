@@ -1,4 +1,4 @@
-/* OverallLocalAccuracyDCS.java
+/* LocalClassAccuracyDCS.java
  * Copyright (C) 2017  Vitor de Albuquerque Torreao
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,32 +23,39 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 /**
- * Implementation of the Overall Local Accuracy (OLA) approach for dynamically
+ * Implementation of the Local Class Accuracy (LCA) approach for dynamically
  * selecting a classifier for a given test instance.
  * @author vitordeatorreao
  * @since 0.1
  *
  */
-public class OverallLocalAccuracyDCS extends KnnAccuracyBasedDCS
+public class LocalClassAccuracyDCS extends KnnAccuracyBasedDCS
 {
     @Override
     protected int selectClassifier(Instance testInstance,
             Classifier[] classifiers) throws Exception
-
     {
         int n_neighbors = this.getKNeighbors(); 
         Instances neighbors = this.getKnnAlgorithm()
                                   .kNearestNeighbours(testInstance,
                                                       n_neighbors);
-        Integer[] correctAnswerCount = new Integer[classifiers.length];
-        for (Instance neighbor : neighbors) {
-            for (int i = 0; i < classifiers.length; i++) {
-                double answer = classifiers[i].classifyInstance(neighbor);
-                if (Labels.Equals(answer, neighbor.classValue())) {
-                    correctAnswerCount[i]++;
+        double[] testLabels = new double[classifiers.length];
+        Double[] classAccuracy = new Double[classifiers.length];
+        for (int i = 0; i < classifiers.length; i++) {
+            testLabels[i] = classifiers[i].classifyInstance(testInstance);
+            int total = 0;
+            int corrects = 0;
+            for (Instance neighbor : neighbors) {
+                double predicted = classifiers[i].classifyInstance(neighbor);
+                if (Labels.Equals(testLabels[i], predicted)) {
+                    total++;
+                    if (Labels.Equals(predicted, neighbor.classValue())) {
+                        corrects++;
+                    }
                 }
             }
+            classAccuracy[i] = total > 0 ? corrects / total : 0.0; 
         }
-        return Enumerables.MaxIndex(correctAnswerCount);
+        return Enumerables.MaxIndex(classAccuracy);
     }
 }

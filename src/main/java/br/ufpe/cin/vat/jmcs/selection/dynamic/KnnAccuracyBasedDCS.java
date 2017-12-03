@@ -16,6 +16,7 @@
 
 package br.ufpe.cin.vat.jmcs.selection.dynamic;
 
+import br.ufpe.cin.vat.jmcs.utils.Labels;
 import weka.classifiers.Classifier;
 import weka.core.Instance;
 
@@ -35,12 +36,12 @@ public abstract class KnnAccuracyBasedDCS extends NearestNeighborsBasedDS
      * @param testInstance - The instance to be labeled.
      * @param classifiers - The original pool of classifiers from which to
      * select one.
-     * @return The best classifier according to the selection rule.
+     * @return The index of the best classifier according to the selection rule.
      * @throws Exception - In case any of the classifiers in the pool have any
      * trouble classifying the nearest neighbors instances or the test instance.
      * @since 0.1 
      */
-    protected abstract Classifier selectClassifier(
+    protected abstract int selectClassifier(
             Instance testInstance, Classifier[] classifiers) throws Exception;
 
     @Override
@@ -56,22 +57,21 @@ public abstract class KnnAccuracyBasedDCS extends NearestNeighborsBasedDS
         boolean unanimous = true;
         for (int i = 1; i < classifiers.length; i++) {
             labels[i] = classifiers[i].classifyInstance(testInstance);
-            double diff = Math.abs(labels[i] - labels[i - 1]);
-            if (diff > 0.0001) unanimous = false;
+            if (!Labels.Equals(labels[i], labels[i - 1])) unanimous = false;
         }
         // if all the classifiers agree, then return the label
         if (unanimous) return labels[0];
         // else, get the k nearest neighbors
-        Classifier chosen = this.selectClassifier(testInstance, classifiers);
-        return chosen.classifyInstance(testInstance);
+        int chosenIndex = this.selectClassifier(testInstance, classifiers);
+        return labels[chosenIndex];
     }
 
     @Override
     public double[] distributionForInstance(Instance testInstance)
             throws Exception
     {
-        Classifier chosen = this.selectClassifier(testInstance,
-                                                  this.getClassifiers());
-        return chosen.distributionForInstance(testInstance);
+        Classifier[] classifiers = this.getClassifiers();
+        int chosenIndex = this.selectClassifier(testInstance, classifiers);
+        return classifiers[chosenIndex].distributionForInstance(testInstance);
     }
 }
