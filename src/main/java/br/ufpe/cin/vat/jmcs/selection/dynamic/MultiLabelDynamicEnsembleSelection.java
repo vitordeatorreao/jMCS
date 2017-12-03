@@ -311,7 +311,8 @@ public class MultiLabelDynamicEnsembleSelection
                 "must have a class label configured.");
         }
         int numAttributes = selectionDataSet.numAttributes();
-        if (selectionDataSet.classIndex() > 0) numAttributes--; // discount for the class
+        // discount for the class
+        if (selectionDataSet.classIndex() > 0) numAttributes--;
         Instances multiLabelDataSet = getMultiLabelDataSet(selectionDataSet);
         int[] labelsIndexes = new int[this.classifiers.length];
         for (int c = 0; c < this.classifiers.length; c++)

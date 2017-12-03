@@ -15,8 +15,12 @@ public class App
 {
     public static void main( String[] args )
     {
+        if (args.length < 1) {
+            System.out.println("You must provide a first argument, which is " +
+                               "the path to the dataset arff file.");
+        }
         try {
-            DataSource source = new DataSource("C:\\Users\\vitor\\Documents\\DataSets\\vote.arff");
+            DataSource source = new DataSource(args[0]);
             Instances instances = source.getDataSet();
             instances.setClassIndex(instances.numAttributes() - 1);
             Random rand = new Random(100);
