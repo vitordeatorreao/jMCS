@@ -29,6 +29,7 @@ import weka.core.Instance;
  *
  */
 public abstract class KnnAccuracyBasedDCS extends NearestNeighborsBasedDS
+    implements DynamicClassifierSelection
 {
     /**
      * Selects a classifier to label the test instance according to specific
@@ -43,6 +44,14 @@ public abstract class KnnAccuracyBasedDCS extends NearestNeighborsBasedDS
      */
     protected abstract int selectClassifier(
             Instance testInstance, Classifier[] classifiers) throws Exception;
+    
+    @Override
+    public Classifier selectClassifier(Instance testInstance) throws Exception
+    {
+        Classifier[] classifiers = this.getClassifiers();
+        int index = this.selectClassifier(testInstance, classifiers);
+        return classifiers[index];
+    }
 
     @Override
     public double classifyInstance(Instance testInstance) throws Exception

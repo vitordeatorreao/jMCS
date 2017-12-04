@@ -17,6 +17,7 @@ import weka.core.Instances;
  *
  */
 public class KNORAEliminateDES extends NearestNeighborsBasedDS
+    implements DynamicEnsembleSelection
 {
     /**
      * The way the selected sub ensemble should be combined to form the final
@@ -69,9 +70,20 @@ public class KNORAEliminateDES extends NearestNeighborsBasedDS
         super(kNeighbors);
         this.combiner = combiner;
     }
-    
-    protected void configureCombiner(Instance testInstance) throws Exception
-    {
+
+    @Override
+    public void setCombiner(MultipleClassifiersCombiner combiner) {
+        this.combiner = combiner;
+    }
+
+    @Override
+    public MultipleClassifiersCombiner getCombiner() {
+        return this.combiner;
+    }
+
+    @Override
+    public Classifier[] selectClassifiers(Instance testInstance)
+            throws Exception {
         Classifier[] pool = this.getClassifiers();
         List<Classifier> selected = new ArrayList<Classifier>();
         for (int k = this.getKNeighbors(); k > 0; k--) {
@@ -91,13 +103,13 @@ public class KNORAEliminateDES extends NearestNeighborsBasedDS
             if (!selected.isEmpty()) break;
         }
         Classifier[] aux = new Classifier[selected.size()];
-        this.combiner.setClassifiers(selected.toArray(aux));
+        return selected.toArray(aux);
     }
 
     @Override
     public double classifyInstance(Instance testInstance) throws Exception
     {
-        this.configureCombiner(testInstance);
+        this.combiner.setClassifiers(this.selectClassifiers(testInstance));
         return this.combiner.classifyInstance(testInstance);
     }
 
@@ -105,7 +117,7 @@ public class KNORAEliminateDES extends NearestNeighborsBasedDS
     public double[] distributionForInstance(Instance testInstance)
             throws Exception
     {
-        this.configureCombiner(testInstance);
+        this.combiner.setClassifiers(this.selectClassifiers(testInstance));
         return this.combiner.distributionForInstance(testInstance);
     }
 }

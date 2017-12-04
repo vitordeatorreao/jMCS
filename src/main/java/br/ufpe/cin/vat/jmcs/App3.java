@@ -2,7 +2,7 @@ package br.ufpe.cin.vat.jmcs;
 
 import java.util.Random;
 
-import br.ufpe.cin.vat.jmcs.selection.dynamic.MultiLabelDynamicEnsembleSelection;
+import br.ufpe.cin.vat.jmcs.selection.dynamic.MultiLabelDES;
 import br.ufpe.cin.vat.jmcs.utils.Statistics;
 import mulan.classifier.transformation.CalibratedLabelRanking;
 import weka.classifiers.trees.J48;
@@ -57,7 +57,7 @@ public class App3
                 // MultiLabel Algorithm
                 CalibratedLabelRanking clr = new CalibratedLabelRanking();
                 // DynamicSelection
-                MultiLabelDynamicEnsembleSelection selector = new MultiLabelDynamicEnsembleSelection();
+                MultiLabelDES selector = new MultiLabelDES();
                 selector.setThreshold(0.9);
                 selector.setClassifiers(new Classifier[] { j48, knn, nb });
                 selector.setCombiner(vote);

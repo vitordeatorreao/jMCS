@@ -31,7 +31,7 @@ import weka.core.neighboursearch.NearestNeighbourSearch;
  *
  */
 public abstract class NearestNeighborsBasedDS
-    implements Classifier, DynamicSelection
+    implements DynamicSelection
 {
     /**
      * The number of nearest neighbors to be considered by the approach.

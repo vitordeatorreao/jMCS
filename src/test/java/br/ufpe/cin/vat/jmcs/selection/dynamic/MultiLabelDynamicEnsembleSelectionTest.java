@@ -62,8 +62,8 @@ public class MultiLabelDynamicEnsembleSelectionTest {
         Classifier[] classifiers = { classifier1, classifier2 };
         
         // Set selector
-        MultiLabelDynamicEnsembleSelection selector =
-                new MultiLabelDynamicEnsembleSelection(classifiers);
+        MultiLabelDES selector =
+                new MultiLabelDES(classifiers);
         
         Instances multiLabel = selector.getMultiLabelDataSet(dataset);
         assertEquals(2, multiLabel.size());

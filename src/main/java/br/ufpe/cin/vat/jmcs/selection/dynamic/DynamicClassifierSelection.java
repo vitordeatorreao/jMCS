@@ -1,4 +1,4 @@
-/* DynamicSelection.java
+/* DynamicClassifierSelection.java
  * Copyright (C) 2017  Vitor de Albuquerque Torreao
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,30 +14,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 package br.ufpe.cin.vat.jmcs.selection.dynamic;
 
 import weka.classifiers.Classifier;
+import weka.core.Instance;
 
 /**
- * Interface for all Dynamic Selection techniques.
+ * Interface for Multiple Classifier Systems that select a single classifier
+ * among the available classifiers in the pool for classifying a given
+ * test instance presented to the system.
  * @author vitordeatorreao
  * @since 0.1
+ *
  */
-public interface DynamicSelection extends Classifier
+public interface DynamicClassifierSelection extends DynamicSelection
 {
     /**
-     * Sets the classifiers from the original pool, from which a subset will be
-     * selected at each classifying step.
-     * @param classifiers - The classifiers that compose the original pool.
+     * Selects a classifier which should best classify the given test instance.
+     * @param testInstance - The test instance to be classified by the Multiple
+     * Classifier System.
+     * @return The classifier to classify the given test instance.
+     * @throws Exception - In case any of the WEKA classes throw some exception.
      * @since 0.1
      */
-    void setClassifiers(Classifier[] classifiers);
-
-    /**
-     * Retrieves the classifiers from the original pool, from which a subset
-     * will be selected at each classifying step.
-     * @return - The classifiers that compose the original pool.
-     * @since 0.1
-     */
-    Classifier[] getClassifiers();
+    Classifier selectClassifier(Instance testInstance) throws Exception;
 }

@@ -26,6 +26,7 @@ import mulan.data.LabelsMetaData;
 import mulan.data.MultiLabelInstances;
 import weka.classifiers.Classifier;
 import weka.classifiers.MultipleClassifiersCombiner;
+import weka.classifiers.meta.Vote;
 import weka.core.Attribute;
 import weka.core.Capabilities;
 import weka.core.DenseInstance;
@@ -40,8 +41,7 @@ import weka.core.Instances;
  * @since 0.1
  *
  */
-public class MultiLabelDynamicEnsembleSelection
-    implements Classifier, DynamicSelection, DynamicEnsembleSelection
+public class MultiLabelDES implements DynamicEnsembleSelection
 {
     /**
      * The set of classifiers in the original pool. 
@@ -77,13 +77,14 @@ public class MultiLabelDynamicEnsembleSelection
 
     /**
      * Constructs a new instance of MultiLabelDynamicEnsembleSelection with
-     * clean settings.
+     * default settings.
      * @since 0.1 
      */
-    public MultiLabelDynamicEnsembleSelection()
+    public MultiLabelDES()
     {
         this.threshold = null;
         this.classifiers = new Classifier[0];
+        this.combiner = new Vote();
     }
 
     /**
@@ -93,7 +94,7 @@ public class MultiLabelDynamicEnsembleSelection
      * subset will be selected at each classification step.
      * @since 0.1
      */
-    public MultiLabelDynamicEnsembleSelection(Classifier[] classifiers)
+    public MultiLabelDES(Classifier[] classifiers)
     {
         this();
         this.classifiers = classifiers;
@@ -107,7 +108,7 @@ public class MultiLabelDynamicEnsembleSelection
      * the original pool of classifiers.
      * @since 0.1
      */
-    public MultiLabelDynamicEnsembleSelection(
+    public MultiLabelDES(
             MultipleClassifiersCombiner ensemble)
     {
         this();
@@ -125,7 +126,7 @@ public class MultiLabelDynamicEnsembleSelection
      * selected classifiers.
      * @since 0.1
      */
-    public MultiLabelDynamicEnsembleSelection(
+    public MultiLabelDES(
             Classifier[] classifiers, MultipleClassifiersCombiner combiner)
     {
         this();
@@ -175,21 +176,25 @@ public class MultiLabelDynamicEnsembleSelection
         this.threshold = threshold;
     }
 
+    @Override
     public Classifier[] getClassifiers()
     {
         return this.classifiers;
     }
 
+    @Override
     public void setClassifiers(Classifier[] classifiers)
     {
         this.classifiers = classifiers;
     }
 
+    @Override
     public MultipleClassifiersCombiner getCombiner()
     {
         return this.combiner;
     }
 
+    @Override
     public void setCombiner(MultipleClassifiersCombiner combiner)
     {
         this.combiner = combiner;
@@ -293,12 +298,14 @@ public class MultiLabelDynamicEnsembleSelection
 		return bipartition;
     }
 
+    @Override
 	public double classifyInstance(Instance instance) throws Exception
 	{
 		this.configureCombiner(instance);
 		return this.combiner.classifyInstance(instance);
 	}
 
+    @Override
     public void buildClassifier(Instances selectionDataSet) throws Exception
     {
         if (this.classifiers == null)
@@ -327,17 +334,33 @@ public class MultiLabelDynamicEnsembleSelection
         this.mlAlgorithm.build(this.selectionDataSet);
     }
 
+    @Override
     public double[] distributionForInstance(Instance instance) throws Exception
     {
         this.configureCombiner(instance);
         return this.combiner.distributionForInstance(instance);
     }
 
+    @Override
     public Capabilities getCapabilities()
     {
         throw new UnsupportedOperationException(
             "getCapabilities is not implemented for the class " +
-            MultiLabelDynamicEnsembleSelection.class.getName());
+            MultiLabelDES.class.getName());
+    }
+
+    @Override
+    public Classifier[] selectClassifiers(Instance testInstance)
+            throws Exception
+    {
+        boolean[] bipartition = this.getBipartition(testInstance);
+        List<Classifier> classifiers = new ArrayList<Classifier>();
+        for (int c = 0; c < this.classifiers.length; c++)
+        {
+            if (bipartition[c]) classifiers.add(this.classifiers[c]);
+        }
+        Classifier[] aux = new Classifier[classifiers.size()];
+        return classifiers.toArray(aux);
     }
 
     /**
@@ -350,14 +373,7 @@ public class MultiLabelDynamicEnsembleSelection
      */
     private void configureCombiner(Instance instance) throws Exception
     {
-        boolean[] bipartition = this.getBipartition(instance);
-        List<Classifier> classifiers = new ArrayList<Classifier>();
-        for (int c = 0; c < this.classifiers.length; c++)
-        {
-            if (bipartition[c]) classifiers.add(this.classifiers[c]);
-        }
-        Classifier[] aux = new Classifier[classifiers.size()];
-        this.combiner.setClassifiers(classifiers.toArray(aux));
+        this.combiner.setClassifiers(this.selectClassifiers(instance));
     }
 
     /**

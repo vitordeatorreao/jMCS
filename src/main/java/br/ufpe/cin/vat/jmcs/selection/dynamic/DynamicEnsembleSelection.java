@@ -17,7 +17,9 @@
 
 package br.ufpe.cin.vat.jmcs.selection.dynamic;
 
+import weka.classifiers.Classifier;
 import weka.classifiers.MultipleClassifiersCombiner;
+import weka.core.Instance;
 
 /**
  * Interface for Multiple Classifier Systems that select a subset of the
@@ -26,7 +28,7 @@ import weka.classifiers.MultipleClassifiersCombiner;
  * @since 0.1
  *
  */
-public interface DynamicEnsembleSelection
+public interface DynamicEnsembleSelection extends DynamicSelection
 {
     /**
      * Configures the way the selected subset of classifiers will be combined
@@ -48,4 +50,16 @@ public interface DynamicEnsembleSelection
      * @since 0.1
      */
     MultipleClassifiersCombiner getCombiner();
+
+    /**
+     * Selects the sub ensemble which should best classify the given test
+     * instance. 
+     * @param testInstance - The instance which should be classified by the
+     * Multiple Classifier System.
+     * @return The list of classifiers which should be used to classify the
+     * given test instance.
+     * @throws Exception - In case the WEKA classes throw any exceptions.
+     * @since 0.1
+     */
+    Classifier[] selectClassifiers(Instance testInstance) throws Exception;
 }
