@@ -16,8 +16,21 @@
 
 package br.ufpe.cin.vat.jmcs.utils;
 
+/**
+ * Utility class providing many useful methods for arrays.
+ * @author vitordeatorreao
+ * @since 0.1
+ *
+ */
 public final class Enumerables
 {
+    /**
+     * Retrieves the position of the element with the greatest value in the
+     * given array.
+     * @param array - The array where the search will be carried.
+     * @return The position of the greatest element in the array.
+     * @since 0.1
+     */
     public static <T extends Object & Comparable<? super T>> int MaxIndex(
             T[] array)
     {
@@ -33,5 +46,28 @@ public final class Enumerables
             i++;
         }
         return max;
+    }
+
+    /**
+     * Retrieves the position of the element with the least value in the
+     * given array.
+     * @param array - The array where the search will be carried.
+     * @return The position of the least element in the array.
+     */
+    public static <T extends Object & Comparable<? super T>> int MinIndex(
+            T[] array)
+    {
+        if (array == null) return -1;
+        int i = 0;
+        int min = -1;
+        T minValue = null;
+        for (T value : array) {
+            if (minValue == null || minValue.compareTo(value) > 0) {
+                minValue = value;
+                min = i;
+            }
+            i++;
+        }
+        return min;
     }
 }

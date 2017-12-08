@@ -35,5 +35,43 @@ public class EnumerablesTest
         Integer[] array4 = { -2, -3, -1, -10 };
         maxIndex = Enumerables.MaxIndex(array4);
         assertEquals(2, maxIndex);
+
+        Integer[] array5 = { 7, 7, 7, 7, 7 };
+        maxIndex = Enumerables.MaxIndex(array5);
+        assertEquals(0, maxIndex);
+    }
+
+    @Test
+    public void testMinIndex()
+    {
+        int minIndex = Enumerables.MinIndex(null);
+        assertTrue(minIndex < 0);
+
+        minIndex = Enumerables.MinIndex(new Integer[0]);
+        assertTrue(minIndex < 0);
+
+        Integer[] array0 = { 2 };
+        minIndex = Enumerables.MinIndex(array0);
+        assertEquals(0, minIndex);
+
+        Integer[] array1 = { -1, 5, 3, 2, 0 };
+        minIndex = Enumerables.MinIndex(array1);
+        assertEquals(0, minIndex);
+
+        Integer[] array2 = { 7, 5, 3, 2, 9 };
+        minIndex = Enumerables.MinIndex(array2);
+        assertEquals(3, minIndex);
+
+        Integer[] array3 = { 7, 1, 9, 2, 3 };
+        minIndex = Enumerables.MinIndex(array3);
+        assertEquals(1, minIndex);
+
+        Integer[] array4 = { -2, -3, -1, -10 };
+        minIndex = Enumerables.MinIndex(array4);
+        assertEquals(3, minIndex);
+
+        Integer[] array5 = { 7, 7, 7, 7, 7 };
+        minIndex = Enumerables.MinIndex(array5);
+        assertEquals(0, minIndex);
     }
 }
