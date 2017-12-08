@@ -11,7 +11,7 @@ import weka.core.converters.ConverterUtils.DataSource;
  * Hello world!
  *
  */
-public class App 
+public class WekaApp 
 {
     public static void main( String[] args )
     {
