@@ -102,7 +102,8 @@ public abstract class NearestNeighborsBasedDS
     @Override
     public void buildClassifier(Instances selectionInstances) throws Exception
     {
-        this.knn = new BallTree(selectionInstances);
+        this.knn = new BallTree();
+        this.knn.setInstances(selectionInstances);
     }
 
     @Override

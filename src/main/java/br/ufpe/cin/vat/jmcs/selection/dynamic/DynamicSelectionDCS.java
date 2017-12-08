@@ -1,4 +1,4 @@
-/* OverallLocalAccuracyDCS.java
+/* DynamicSelectionDCS.java
  * Copyright (C) 2017  Vitor de Albuquerque Torreao
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,33 +23,35 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 /**
- * Implementation of the Overall Local Accuracy (OLA) approach for dynamically
- * selecting a classifier for a given test instance.
+ * Implementation of <b>the</b> Dynamic Selection algorithm proposed by Puuronen
+ * et al (1999).
  * @author vitordeatorreao
  * @since 0.1
  *
  */
-public class OverallLocalAccuracyDCS extends KnnAccuracyBasedDCS
+public class DynamicSelectionDCS extends KnnAccuracyBasedDCS
 {
     @Override
     protected int selectClassifier(Instance testInstance,
             Classifier[] classifiers) throws Exception
-
     {
-        int n_neighbors = this.getKNeighbors(); 
+        int n_neighbors = this.getKNeighbors();
         Instances neighbors = this.getKnnAlgorithm()
                                   .kNearestNeighbours(testInstance,
                                                       n_neighbors);
-        Integer[] correctAnswerCount = new Integer[classifiers.length];
-        for (int i = 0; i < classifiers.length; i++) {
-            correctAnswerCount[i] = new Integer(0);
-            for (Instance neighbor : neighbors) {
-                double answer = classifiers[i].classifyInstance(neighbor);
-                if (Labels.Equals(answer, neighbor.classValue())) {
-                    correctAnswerCount[i]++;
-                }
+        double[] distances = this.getKnnAlgorithm().getDistances();
+        Double[] weightedErrors = new Double[classifiers.length];
+        for (int j = 0; j < classifiers.length; j++) {
+            weightedErrors[j] = new Double(0.0);
+            for (int i = 0; i < n_neighbors; i++) {
+                Instance neighbor = neighbors.get(i);
+                double answer = classifiers[j].classifyInstance(neighbor);
+                double error = Labels.Equals(answer, neighbor.classValue()) ?
+                               0.0 : 1.0;
+                weightedErrors[j] += distances[i] * error;
             }
+            weightedErrors[j] /= n_neighbors > 0 ? n_neighbors : 1.0;
         }
-        return Enumerables.MaxIndex(correctAnswerCount);
+        return Enumerables.MinIndex(weightedErrors);
     }
 }
