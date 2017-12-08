@@ -23,9 +23,9 @@ public class DynamicEnsembleSelectionApp extends MCSTestApp
             vote.addPreBuiltClassifier(classifier);
         }
         // DynamicSelection
-        DynamicEnsembleSelection selector = new KNORAEliminateDES();
+        DynamicEnsembleSelection selector = new DynamicVotingDES();
         selector.setClassifiers(classifiers);
-        selector.setCombiner(vote);
+        //selector.setCombiner(vote);
         // build the selector
         selector.buildClassifier(validation);
         return selector;

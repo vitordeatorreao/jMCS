@@ -90,4 +90,43 @@ public final class Statistics
     {
         return Math.sqrt(Variance(sample));
     }
+
+    /**
+     * Applies Min Max Normalization to the given array without altering its
+     * content.
+     * @param sample - The unnormalized sample.
+     * @return The normalized sample (all values between 0 and 1).
+     */
+    public static strictfp double[] MinMaxNormalize(double[] sample)
+    {
+        Double[] aux = new Double[sample.length];
+        for (int i = 0; i < sample.length; i++) {
+            aux[i] = new Double(sample[i]);
+        }
+        double max = sample[Enumerables.MaxIndex(aux)];
+        double min = sample[Enumerables.MinIndex(aux)];
+        double range = max - min;
+        double[] newSample = new double[sample.length];
+        for (int i = 0; i < sample.length; i++) {
+            newSample[i] =  range > 0 ? (sample[i] - min) / range : 0.0;
+        }
+        return newSample;
+    }
+
+    /**
+     * Applies the Z-Score normalization to the given array without altering its
+     * content.
+     * @param sample - The unnormalized sample.
+     * @return The normalized sample.
+     */
+    public static strictfp double[] ZScoreNormalize(double[] sample)
+    {
+        double std = StandardDeviation(sample);
+        double mean = Mean(sample);
+        double[] newSample = new double[sample.length];
+        for (int i = 0; i < sample.length; i++) {
+            newSample[i] = std > 0 ? (sample[i] - mean) / std : 0.0;
+        }
+        return newSample;
+    }
 }
