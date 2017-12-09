@@ -17,7 +17,7 @@ public class DynamicClassifierSelectionApp extends MCSTestApp
             Instances validation, Classifier[] classifiers) throws Exception
     {
         // DynamicSelection
-        DynamicClassifierSelection selector = new DynamicSelectionDCS();
+        DynamicClassifierSelection selector = new MCBBasedDCS();
         selector.setClassifiers(classifiers);
         // build the selector
         selector.buildClassifier(validation);
