@@ -16,6 +16,9 @@
 
 package br.ufpe.cin.vat.jmcs.utils;
 
+import java.util.Arrays;
+import java.util.Comparator;
+
 /**
  * Utility class providing many useful methods for arrays.
  * @author vitordeatorreao
@@ -69,5 +72,41 @@ public final class Enumerables
             i++;
         }
         return min;
+    }
+
+    /**
+     * Sorts the given array, but instead of returning the sorted array, returns
+     * an array of the indexes of the elements in their sorted order.
+     * @param data - The array to be sorted.
+     * @return The indexes of the elements in the array in their sorted order.
+     */
+    public static <T extends Object & Comparable<? super T>> int[] SortIndexes(
+            T[] data)
+    {
+        Integer[] indexer = new Integer[data.length];
+        for (int i = 0; i < data.length; i++) {
+            indexer[i] = i;
+        }
+        IndexComparator<T> idxComp = new IndexComparator<T>(data);
+        Arrays.sort(indexer, idxComp);
+        int[] indexes = new int[data.length];
+        for (int i = 0; i < data.length; i++) {
+            indexes[i] = indexer[i];
+        }
+        return indexes;
+    }
+
+    private static class IndexComparator
+    <T extends Object & Comparable<? super T>> implements Comparator<Integer>
+    {
+        private T[] data;
+        public IndexComparator(T[] data)
+        {
+            this.data = data;
+        }
+        @Override
+        public int compare(Integer i1, Integer i2) {
+            return data[i1].compareTo(data[i2]);
+        }
     }
 }

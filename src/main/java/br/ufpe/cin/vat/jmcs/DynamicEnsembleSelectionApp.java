@@ -23,7 +23,7 @@ public class DynamicEnsembleSelectionApp extends MCSTestApp
             vote.addPreBuiltClassifier(classifier);
         }
         // DynamicSelection
-        DynamicEnsembleSelection selector = new DynamicVotingDES();
+        DynamicEnsembleSelection selector = new DynamicVotingSelectionDES();
         selector.setClassifiers(classifiers);
         //selector.setCombiner(vote);
         // build the selector

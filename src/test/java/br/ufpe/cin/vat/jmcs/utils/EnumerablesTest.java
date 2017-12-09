@@ -1,7 +1,6 @@
 package br.ufpe.cin.vat.jmcs.utils;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -73,5 +72,21 @@ public class EnumerablesTest
         Integer[] array5 = { 7, 7, 7, 7, 7 };
         minIndex = Enumerables.MinIndex(array5);
         assertEquals(0, minIndex);
+    }
+
+    @Test
+    public void testSortIndexes()
+    {
+        int[] indexes = Enumerables.SortIndexes(new Double[] {});
+        assertArrayEquals(new int[] { }, indexes);
+
+        indexes = Enumerables.SortIndexes(new Double[] { 5.0 });
+        assertArrayEquals(new int[] { 0 }, indexes);
+
+        indexes = Enumerables.SortIndexes(new Double[] { 5.0, 2.0, 1.0, 2.0 });
+        assertArrayEquals(new int[] { 2, 1, 3, 0 }, indexes);
+
+        indexes = Enumerables.SortIndexes(new Double[] { 1.0, 2.0, 3.0, 4.0 });
+        assertArrayEquals(new int[] { 0, 1, 2, 3 }, indexes);
     }
 }
