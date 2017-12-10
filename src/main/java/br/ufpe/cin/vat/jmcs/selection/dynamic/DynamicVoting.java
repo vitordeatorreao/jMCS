@@ -41,6 +41,7 @@ public class DynamicVoting extends NearestNeighborsBasedDS
 
     public DynamicVoting()
     {
+        super();
         this.combiner = new WeightedVote();
     }
 
