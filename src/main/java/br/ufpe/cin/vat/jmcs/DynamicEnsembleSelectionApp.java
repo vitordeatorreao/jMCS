@@ -19,13 +19,10 @@ public class DynamicEnsembleSelectionApp extends MCSTestApp
     {
         // Major Vote combiner
         Vote vote = new Vote();
-        for (Classifier classifier : classifiers) {
-            vote.addPreBuiltClassifier(classifier);
-        }
         // DynamicSelection
-        DynamicEnsembleSelection selector = new DynamicVotingSelectionDES();
+        DynamicEnsembleSelection selector = new KNORAEliminateDES();
         selector.setClassifiers(classifiers);
-        //selector.setCombiner(vote);
+        selector.setCombiner(vote);
         // build the selector
         selector.buildClassifier(validation);
         return selector;

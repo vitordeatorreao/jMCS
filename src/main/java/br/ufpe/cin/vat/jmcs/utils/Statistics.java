@@ -71,6 +71,24 @@ public final class Statistics
                     "The given array must have at least two elements");
         }
         double mean = Mean(sample);
+        return Variance(sample, mean);
+    }
+
+    /**
+     * Calculates the sample variance for the given observations assuming the
+     * given mean is true.
+     * @param sample - set of observations collected
+     * @param mean - the sample mean for the observations collected
+     * @return The sample variance for the given observations
+     * @since 0.1
+     */
+    public static strictfp double Variance(double[] sample, double mean)
+    {
+        if (sample == null || sample.length < 2)
+        {
+            throw new IllegalArgumentException(
+                    "The given array must have at least two elements");
+        }
         double sumOfDeviations = 0d;
         for (double observation : sample)
         {
@@ -89,6 +107,20 @@ public final class Statistics
     public static strictfp double StandardDeviation(double[] sample)
     {
         return Math.sqrt(Variance(sample));
+    }
+
+    /**
+     * Calculates the sample standard deviation for the given observations
+     * assuming the given mean is true.
+     * @param sample - set of observations collected.
+     * @param mean - the sample mean for the observations collected.
+     * @return The sample standard deviation for the given observations.
+     * @since 0.1
+     */
+    public static strictfp double StandardDeviation(
+            double[] sample, double mean)
+    {
+        return Math.sqrt(Variance(sample, mean));
     }
 
     /**

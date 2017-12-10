@@ -320,7 +320,7 @@ public class MultiLabelDES implements DynamicEnsembleSelection
         }
         int numAttributes = selectionDataSet.numAttributes();
         // discount for the class
-        if (selectionDataSet.classIndex() > 0) numAttributes--;
+        if (selectionDataSet.classIndex() >= 0) numAttributes--;
         Instances multiLabelDataSet = getMultiLabelDataSet(selectionDataSet);
         int[] labelsIndexes = new int[this.classifiers.length];
         for (int c = 0; c < this.classifiers.length; c++)
@@ -373,7 +373,12 @@ public class MultiLabelDES implements DynamicEnsembleSelection
      */
     private void configureCombiner(Instance instance) throws Exception
     {
-        this.combiner.setClassifiers(this.selectClassifiers(instance));
+        Classifier[] selectedClassifiers = this.selectClassifiers(instance);
+        if (selectedClassifiers.length > 0) {
+            this.combiner.setClassifiers(selectedClassifiers);
+        } else {
+            this.combiner.setClassifiers(this.classifiers);
+        }
     }
 
     /**

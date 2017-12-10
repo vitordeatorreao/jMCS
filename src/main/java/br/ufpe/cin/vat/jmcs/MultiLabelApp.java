@@ -21,9 +21,6 @@ public class MultiLabelApp extends MCSTestApp
     {
         // Major Vote combiner
         Vote vote = new Vote();
-        for (Classifier classifier : classifiers) {
-            vote.addPreBuiltClassifier(classifier);
-        }
         // MultiLabel Algorithm
         CalibratedLabelRanking clr = new CalibratedLabelRanking();
         // DynamicSelection
