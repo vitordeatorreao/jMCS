@@ -85,7 +85,7 @@ public final class SelectionComparisonExperiment
         MLKNN, CLR, OLA, LCA, DV, DS, DVS, KNORAE, MCB, MV
     }
 
-    private static final double MULTILABEL_THRESHOLD = 0.9;
+    private static final double MULTILABEL_THRESHOLD = 0.7;
 
     public static DynamicSelection prepareSelector(Instances train,
             Instances validation, Classifier[] classifiers,
@@ -197,7 +197,11 @@ public final class SelectionComparisonExperiment
             return;
         }
         SelectionAlgorithm[] algorithms = new SelectionAlgorithm[]
-                { SelectionAlgorithm.MV };
+                { SelectionAlgorithm.MLKNN, SelectionAlgorithm.CLR,
+                  SelectionAlgorithm.OLA, SelectionAlgorithm.LCA,
+                  SelectionAlgorithm.DV, SelectionAlgorithm.DS,
+                  SelectionAlgorithm.DVS, SelectionAlgorithm.KNORAE,
+                  SelectionAlgorithm.MCB, SelectionAlgorithm.MV };
         // CSV header
         System.out.print("file name;");
         for (int i = 0; i < algorithms.length; i++) {
